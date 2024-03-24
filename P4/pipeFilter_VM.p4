@@ -13,14 +13,14 @@ const bit<16> A_ADD=16w0x1;
 const bit<16> B_ADD=16w0x1;
 const bit<16> C_ADD=16w0x3;
 
-/*以太网头部解析*/
+
 header Ethernet {
 	bit<48> dstAddr;
 	bit<48> srcAddr;
 	bit<16> etherType;
 }
 
-/*IPV4头部解析*/
+
 header Ipv4{
 	bit<4> version;
 	bit<4> ihl;
@@ -39,8 +39,7 @@ header Ipv4{
 
 header MyFlow{
 	bit<32> id;
-}//这个是什么还不知道
-
+}
 
 struct ingress_headers_t{
 	Ethernet ethernet;
@@ -77,22 +76,22 @@ parser IngressParser(packet_in pkt,
         inout standard_metadata_t standard_metadata){
 
     state start{
-		pkt.extract(ig_intr_md);//提取头部并且移动相应的位数
-		pkt.advance(PORT_METADATA_SIZE);//移动指针，跳过不需要的字段
-		transition parse_ethernet;//状态转移
+		pkt.extract(ig_intr_md);
+		pkt.advance(PORT_METADATA_SIZE);
+		transition parse_ethernet;
 	}
 
-    state parse_ethernet{//以太网解析
+    state parse_ethernet{
 		pkt.extract(hdr.ethernet);
-        transition select((bit<16>)hdr.ethernet.etherType) {//这里的select相当于switch语句选择不同的协议跳转
+        transition select((bit<16>)hdr.ethernet.etherType) {
             (bit<16>)ether_type_t.IPV4      : parse_ipv4;
-            (bit<16>)ether_type_t.ARP       : accept;//accept,将数据包传给下一个阶段
+            (bit<16>)ether_type_t.ARP       : accept;
             default : accept;
         }
 	}
 
 	state parse_ipv4{
-		pkt.extract(hdr.ipv4);//提取ipv4字段
+		pkt.extract(hdr.ipv4);
         transition select(hdr.ipv4.protocol) {
             (bit<8>)ip_proto_t.ICMP             : accept;
             (bit<8>)ip_proto_t.IGMP             : accept;
@@ -103,7 +102,7 @@ parser IngressParser(packet_in pkt,
 	}
 
 	state parse_myflow{
-		pkt.extract(hdr.myflow);//这里的id可能是构造数据包的过程中生成的id
+		pkt.extract(hdr.myflow);
 		transition accept;
 	}
 }
